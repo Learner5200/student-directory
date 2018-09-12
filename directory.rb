@@ -8,27 +8,31 @@ def print_menu
   puts "9. Exit"
 end
 
+def add_students(name, cohort)
+  @students << {name: name, cohort: cohort.to_sym}
+end
+
 def input_students
   puts "Please enter the name of a student"
   puts "To finish, just hit return twice"
-  name = gets.chomp
+  name = STDIN.gets.chomp
 
   puts "And what was their cohort?"
   puts "To finish, just hit return twice"
-  cohort = gets.chomp.to_sym
+  cohort = STDIN.gets.chomp.to_sym
 
   while !name.empty? do
-    @students << {name: name, cohort: cohort}
+    add_students(name, cohort)
     puts "Now we have #{@students.count} students."
     puts "Please enter the name of a student"
-    name = gets.chomp
+    name = STDIN.gets.chomp
     puts "And what was their cohort?"
-    cohort = gets.chomp.to_sym
+    cohort = STDIN.gets.chomp
   end
 end
 
-def save_students
-  file = File.open("students.csv", "w")
+def save_students(filename)
+  file = File.open(filename, "w")
   @students.each do |student|
     student_data = [student[:name], student[:cohort]]
     csv_line = student_data.join(",")
@@ -37,15 +41,26 @@ def save_students
   file.close
 end
 
-def load_students
-  file = File.open("students.csv", "r")
+def load_students(filename = "students.csv")
+  file = File.open(filename, "r")
   file.readlines.each do |line|
     name, cohort = line.chomp.split(",")
-    @students << {name: name, cohort: cohort.to_sym}
+    add_students(name, cohort)
   end
   file.close
 end
 
+def try_load_students
+  filename = ARGV.first
+  return if filename.nil?
+  if File.exists?(filename)
+    load_students(filename)
+    puts "Loaded #{@students.count} from #{filename}"
+  else
+    puts "Sorry, #{filename} doesn't exist."
+    exit
+  end
+end
 
 def print_header
   puts "The students of Villains Academy".center(80)
@@ -75,9 +90,11 @@ def process(selection)
   when "2"
     show_students
   when "3"
-    save_students
+    puts "please enter the filename"
+    save_students(gets.chomp)
   when "4"
-    load_students
+    puts "please enter the filename"
+    load_students(gets.chomp)
   when "9"
     exit
   else
@@ -88,12 +105,11 @@ end
 def interactive_menu
   loop do
     print_menu
-    process(gets.chomp)
+    process(STDIN.gets.chomp)
+    puts "\n\nThere you go! Is there anything else I can do?\n\n"
   end
 end
 
 
-
-
-
+try_load_students
 interactive_menu
